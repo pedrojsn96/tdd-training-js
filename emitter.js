@@ -6,27 +6,38 @@ module.exports = {
 
       if (this.events[event]) {
         if (this.events[event].includes(callback)) {
-          return;
+          return this;
         }
         this.events[event].push(callback);
-        return this.events;
+        return this;
       }
-      return (this.events[event] = [callback]);
+      this.events[event] = [callback];
+      return this;
     };
     this.off = (event, callback) => {
-      if (!this.events[event]) return;
+      if (!this.events[event]) return this;
       const getIndex = this.events[event].indexOf(callback);
 
-      return this.events[event].splice(getIndex, 1);
+      this.events[event].splice(getIndex, 1);
+      return this;
     };
     this.emit = (event, data) => {
-      if (!this.events[event] || this.events[event].length == 0) return;
+      if (!this.events[event] || this.events[event].length == 0) return this;
       this.events[event].forEach((callback) =>
         callback({ ...data, type: "loading" })
       );
       return;
     };
-    this.once = () => {};
+    this.once = (event, callback) => {
+      this.events[event] = this.events[event] || [];
+      const onceWrapper = () => {
+        callback();
+        this.off(event, onceWrapper);
+      };
+
+      this.events[event].push(onceWrapper);
+      return this;
+    };
     this.race = () => {};
 
     return this;
