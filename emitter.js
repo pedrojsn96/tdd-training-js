@@ -1,24 +1,22 @@
 module.exports = {
   create() {
     this.events = {};
+    this.cancel = (event, callback) => {
+      const getIndex = this.events[event].indexOf(callback);
+      this.events[event].splice(getIndex, 1);
+    };
     this.on = (event, callback) => {
       if (!callback) throw "Expected a function as the second argument";
 
-      const cancel = () => {
-        const getIndex = this.events[event].indexOf(callback);
-
-        this.events[event].splice(getIndex, 1);
-      };
-
       if (this.events[event]) {
         if (this.events[event].includes(callback)) {
-          return cancel;
+          return () => this.cancel(event, callback);
         }
         this.events[event].push(callback);
-        return cancel;
+        return () => this.cancel(event, callback);
       }
       this.events[event] = [callback];
-      return cancel;
+      return () => this.cancel(event, callback);
     };
     this.off = (event, callback) => {
       if (!this.events[event]) return this;
@@ -42,7 +40,7 @@ module.exports = {
       };
 
       this.events[event].push(onceWrapper);
-      return this;
+      return () => this.cancel(event, callback);
     };
     this.race = () => {};
 
