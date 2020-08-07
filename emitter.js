@@ -4,15 +4,21 @@ module.exports = {
     this.on = (event, callback) => {
       if (!callback) throw "Expected a function as the second argument";
 
+      const cancel = () => {
+        const getIndex = this.events[event].indexOf(callback);
+
+        this.events[event].splice(getIndex, 1);
+      };
+
       if (this.events[event]) {
         if (this.events[event].includes(callback)) {
-          return this;
+          return cancel;
         }
         this.events[event].push(callback);
-        return this;
+        return cancel;
       }
       this.events[event] = [callback];
-      return this;
+      return cancel;
     };
     this.off = (event, callback) => {
       if (!this.events[event]) return this;
